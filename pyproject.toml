@@ -25,13 +25,13 @@ timeout = 60
 pythonpath = ["pysrc"]
 
 [tool.poetry]
-name = "pyplate"
-version = "0.0.0"
+name = "pycro-scrape"
+version = "0.1.0"
 description = ""
 authors = ["Tyson Holub <tyson@tysonholub.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{ include = "pyplate", from = "pysrc" }]
+packages = [{ include = "pycro_scrape", from = "pysrc" }]
 include = ["pyplate.md"]
 
 [tool.poetry.dependencies]
@@ -46,7 +46,7 @@ pytest-asyncio = "^0.24"
 pytest-timeout = "^2"
 
 [tool.poetry.scripts]
-pyplate = { callable = "pyplate.cli:app" }
+pycro-scrape = { callable = "pycro_scrape.cli:app" }
 
 [tool.isort]
 line_length = 119

@@ -1,3 +1,3 @@
-from pyplate.cli import app
+from pycro_scrape.cli import app
 
 app()

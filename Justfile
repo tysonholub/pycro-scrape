@@ -47,3 +47,11 @@ test path="":
     poetry run coverage run -m pytest {{path}} -vv
     poetry run coverage report -m
     poetry run coverage html
+
+
+# Run docker compose with the given arguments
+compose +args:
+    #!/bin/bash
+    set -euxo pipefail
+
+    docker compose {{args}}

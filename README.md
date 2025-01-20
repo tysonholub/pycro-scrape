@@ -33,6 +33,7 @@ Justfile support for Windows requires [cygwin](https://www.cygwin.com/). Once in
 -   `install`: installs poetry dependencies and pre-commit git hooks
 -   `update_boilerplate`: fetches and applies updates from the boilerplate remote
 -   `test`: runs pytest with test coverage report
+-   `compose` runs docker compose with the given arguments
 
 ## Usage
 

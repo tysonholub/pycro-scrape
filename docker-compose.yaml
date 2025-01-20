@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  pycro-redis:
+    image: redis:latest
+    hostname: pycro-redis
+    container_name: pycro-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 50
+  pycro_scrape:
+    hostname: pycro-scrape
+    container_name: pycro-scrape
+    depends_on:
+      pycro-redis:
+        condition: service_healthy
+    healthcheck:
+      # redirect to pid 1, file descriptor 1 for container logging
+      test: ["CMD-SHELL", "./healthcheck.sh > /proc/1/fd/1 2>&1"]
+      interval: 30s
+      timeout: 2s
+      retries: 5
+    volumes:
+      - ./pysrc:/app/pysrc
+      - ./.debugpy:/app/.debugpy
+    ports:
+      - 5001:5001
+      - 5679:5679
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        POETRY_DEPENDENCY_INSTALLS: --with=dev
+    environment:
+      APP_ROOT: "/app"
+      BASE_URL: "http://localhost:5001"
+      PORT: 5001
+      REDIS_ENDPOINT: pycro-redis
+      REDIS_PORT: 6379
+      PYCRO_SCRAPE_SETTINGS_MODULE: "pycro_scrape.config.development:settings"
+    entrypoint: >
+      python -m watchdog.watchmedo auto-restart
+      --directory /app/pysrc
+      --pattern='*.py'
+      --recursive
+      python --
+      -m debugpy --listen 0.0.0.0:5679 --log-to /app/.debugpy
+      -m uvicorn --app-dir=/app/pysrc --host=0.0.0.0 --port 5001 --factory pycro_scrape:create_app

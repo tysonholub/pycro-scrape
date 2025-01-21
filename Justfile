@@ -55,3 +55,19 @@ compose +args:
     set -euxo pipefail
 
     docker compose {{args}}
+
+
+# Builds the pycro-scrape docker image and publishes to docker hub. Image will be tagged with current branch and short commit sha
+publish:
+    #!/bin/bash
+    set -euxo pipefail
+
+    tag=$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)
+    docker build \
+        -t pycro-scrape \
+        -t tysonholub/pycro-scrape:latest \
+        -t tysonholub/pycro-scrape:$tag \
+        .
+
+    docker push tysonholub/pycro-scrape:latest
+    docker push tysonholub/pycro-scrape:$tag

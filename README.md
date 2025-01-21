@@ -33,11 +33,75 @@ Justfile support for Windows requires [cygwin](https://www.cygwin.com/). Once in
 -   `install`: installs poetry dependencies and pre-commit git hooks
 -   `update_boilerplate`: fetches and applies updates from the boilerplate remote
 -   `test`: runs pytest with test coverage report
--   `compose` runs docker compose with the given arguments
+-   `compose`: runs docker compose with the given arguments
+-   `publish`: builds the pycro-scrape docker image and publishes to docker hub. Image will be tagged with current branch and short commit sha, and latest
 
 ## Usage
 
-TODO
+### Docker Image
+
+A prebuilt docker image can be used to run pycro-scrape. It requires a running redis connection. To get started locally:
+
+First create a pycro-scrape docker network
+
+```bash
+docker network create pycro-redis
+```
+
+Start a local redis container
+
+```bash
+docker run --rm -it \
+    --hostname=pycro-redis \
+    --network=pycro-scrape \
+    redis
+```
+
+Then start the pycro-scrape container
+
+```bash
+docker run --rm -it \
+    -e BASE_URL="http://localhost:5001" \
+    -e PORT=5001 \
+    -e REDIS_ENDPOINT=pycro-redis \
+    -e REDIS_PORT=6379 \
+    -e PYCRO_SCRAPE_SETTINGS_MODULE="pycro_scrape.config.production:settings" \
+    -p 5001:5001 \
+    --network=pycro-scrape \
+    --hostname=pycro-scrape \
+    pycro-scrape
+```
+
+With that done you should be able to access openapi docs at http://localhost:5001/api/docs
+
+Start a new pycro-scrape browser session with POST request to http://localhost:5001/api/v1/sessions, with body
+
+```
+{
+    "url": "https://www.reddit.com",
+    "browser": "chrome"
+}
+```
+
+A successful response will provide JSON with `html_response` key, and a `session` key. Use the `session.id` key to make subsequent fetch API requests against that browser session.
+
+Send a POST request to http://localhost:5001/api/v1/sessions/{session.id}/fetch, with body
+
+```
+{
+    "method": "post",
+    "url": "https://search.api.com/v1/search",
+    "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6InR5NW9uaDBsdWIiLCJpYXQiOjE1MTYyMzkwMjJ9.pnuDIvcSL0t2nIEXRDslglTU3KFsQMQopz98qXqT6KA",
+        "Content-Type": "application/json"
+    },
+    "post_data": {
+        "filters": "customer_id: 1462",
+    }
+}
+```
+
+A successful response will include a `fetch_response` key and an updated `session` key. A session expires after 1 hour of no use.
 
 ## Boilerplate
 
